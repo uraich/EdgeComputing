@@ -1,0 +1,41 @@
+#!/usr/bin/python3
+import serial,time
+import sys
+
+try:
+    ser = serial.Serial('/dev/ttyACM0',115200)
+except:
+    print("Could not find /dev/ttyACM0. Is your ESP32 connected?")
+    sys.exit()
+
+# start the program on the ESP32
+
+ser.write(bytes("\r\n","ascii"))
+ser.write(bytes("import gesture\r\n","ascii"))
+# time.sleep(2)
+
+print("Start reading data from ESP32")
+while True:
+    data = ser.readline().decode('utf-8')
+    if data.find("ax,ay,az") == -1:
+        pass
+    else:
+        tmp = data.split(',')
+        gtype = tmp[3].replace('\r\n','')
+        print("Gesture type: ",gtype)
+        filename = gtype+'_'+time.strftime("%Y%m%d-%H%M%S")+".dat"
+        print(filename)
+        f = open(filename,"w")
+        data = data.replace(',' + gtype + '\r',"")
+        f.write(data)
+        print(data)
+            data = ser.readline().decode('utf-8')
+            data = data.replace('\r','')
+            if data.find('end') == -1:
+                f.write(data)
+        print("Closing file")
+        f.close()
+            
+
+        
+    

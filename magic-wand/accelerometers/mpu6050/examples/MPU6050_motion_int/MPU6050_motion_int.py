@@ -1,0 +1,166 @@
+# MPU6050_motion_int demonstrates how to set the MPU6050 to sleep and wake it up with a motion interrupt
+# This program is modelled after MPU6050_motion_int.ino which is part of Jeff Rowberg's i2cdev library
+# Copyright (c) U. Raich 23.2.2022
+# The program is part of a course on TinyML prepared for the University of Cape Coast, Ghana
+# It is released under the MIT license
+
+from machine import Pin
+from utime import sleep_ms
+from MPU6050 import MPU6050
+from MPU6050_const import *
+
+WAKEUP_PIN = 26
+LED_PIN    = 19
+debug = True
+
+def wakeUpNow(src) : # THE PROGRAM CONTINUES FROM HERE AFTER WAKING UP    (i.e. after getting interrupt)
+    # execute code here after wake-up before returning to the loop() function  
+    # timers and code using timers (serial.print and more...) will not work here.  
+    # we don't really need to execute any special functions here, since we  
+    # just want the thing to wake up 
+
+    sleep_ms(500)
+    print("WOKEN UP !!!!!!!!!!")
+    sleep(500)
+    count = 10
+    while count != 0 :
+            sleep_ms(1000)
+            count -=1
+            print(count)
+            sleep_ms(1000)
+
+    # precautionary while we do other stuff
+    # detachInterrupt(0);
+
+# Initialize the LED
+led = Pin(LED_PIN,Pin.OUT)
+# Initialize the interrupt pin
+wakeup = Pin(WAKEUP_PIN,Pin.IN,Pin.PULL_UP)
+
+# Initialize the MPU6050
+accelgyro = MPU6050()
+
+# verify connection
+print("Testing device connections...")
+if accelgyro.testConnection():
+    print("MPU6050 connection successful")
+else:
+    print("MPU6050 connection failed")
+    sys.exit()
+
+# Clear the power management register PME_MGMT_1
+# This sets the sleep bit to "not sleep"
+# clk select to the internal oscillator
+# the temperature sensor is enabled
+
+accelgyro.setPowerManagement_1(0)
+if debug:
+    print("PWR_MGMT_1: 0x{:02x}".format(accelgyro.getPowerManagement_1()))
+
+# reset the signal path
+accelgyro.resetSignalPath()
+
+# set the interrupt pin enable to latch mode
+accelgyro.setInterruptLatch(True)
+# and set the interrupt mode to active low
+accelgyro.setInterruptMode(MPU6050_INTMODE_ACTIVELOW)
+if debug:
+    print("INT_PIN_CFG: 0x{:02x}".format(accelgyro.getInterruptConfig()))
+
+# set the digital high pass filter
+accelgyro.setDHPFMode(0x01)
+if debug:
+    print("ACCEL_CONFIG: 0x{:02x}".format(accelgyro.getAccelConfig()))
+
+# set the motion threshold
+accelgyro.setMotionDetectionThreshold(10)
+if debug:
+    print("MOT_THR: 0x{:02x}".format(accelgyro.getMotionDetectionThreshold()))
+
+# set the motion duration
+accelgyro.setMotionDetectionDuration(40)
+if debug:
+    print("MOT_DUR: 0x{:02x}".format(accelgyro.getMotionDetectionDuration()))
+
+# set the motion control
+accelgyro.setAccelerometerPowerOnDelay(1)
+accelgyro.setFreefallDetectionCounterDecrement(1)
+accelgyro.setMotionDetectionCounterDecrement(1)
+if debug:
+    print("MOT_DETECT_CTRL: 0x{:02x}".format(accelgyro.getMotionDetectionControl()))
+
+# attach the interrupt service routine
+wakeup.irq(trigger=Pin.IRQ_FALLING, handler=wawakeUpNow)
+
+# enable the motion detection interrupt
+accelgyro.setIntMotionEnabled(True)
+
+#define SIGNAL_PATH_RESET  0x68
+#define I2C_SLV0_ADDR      0x37
+#define ACCEL_CONFIG       0x1C 
+#define MOT_THR            0x1F  // Motion detection threshold bits [7:0]
+#define MOT_DUR            0x20  // Duration counter threshold for motion interrupt generation, 1 kHz rate, LSB = 1 ms
+#define MOT_DETECT_CTRL    0x69
+#define INT_ENABLE         0x38
+#define WHO_AM_I_MPU6050 0x75 // Should return 0x68
+#define INT_STATUS 0x3A*/
+ 
+#  writeByte(MPU6050_ADDRESS, 0x6B, 0x00);
+#  writeByte(MPU6050_ADDRESS, SIGNAL_PATH_RESET, 0x07); //Reset all internal signal paths in the MPU-6050 by writing 0x07 to register 0x68;
+#  writeByte(MPU6050_ADDRESS, I2C_SLV0_ADDR, 0x20); //write register 0x37 to select how to use the interrupt pin. For an active high, push-pull signal that stays until register (decimal) 58 is read, write 0x20.
+#  writeByte(MPU6050_ADDRESS, ACCEL_CONFIG, 0x01); //Write register 28 (==0x1C) to set the Digital High Pass Filter, bits 3:0. For example set it to 0x01 for 5Hz. (These 3 bits are grey in the data sheet, but they are used! Leaving them 0 means the filter always outputs 0.)
+#  writeByte(MPU6050_ADDRESS, MOT_THR, 10); //Write the desired Motion threshold to register 0x1F (For example, write decimal 20).  
+#  writeByte(MPU6050_ADDRESS, MOT_DUR, 40); //Set motion detect duration to 1  ms; LSB is 1 ms @ 1 kHz rate  
+#  writeByte(MPU6050_ADDRESS, MOT_DETECT_CTRL, 0x15); //to register 0x69, write the motion detection decrement and a few other settings (for example write 0x15 to set both free-fall and motion decrements to 1 and accelerometer start-up delay to 5ms total by adding 1ms. )   
+#  writeByte(MPU6050_ADDRESS, INT_ENABLE, 0x40); //write register 0x38, bit 6 (0x40), to enable motion detection interrupt.     
+#  writeByte(MPU6050_ADDRESS, 0x37, 160); // now INT pin is active low
+
+#  pinMode(2, INPUT); // sets the digital pin 7 as input
+
+#  pinMode(wakePin, INPUT_PULLUP); // wakePin is pin no. 2
+#  pinMode(led, OUTPUT); //   led is pin no. 13
+#  // attachInterrupt(0, wakeUpNow, LOW); // use interrupt 0 (pin 2) and run function wakeUpNow when pin 2 gets LOW
+
+'''
+def sleepNow() :
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN); // sleep mode is set here  
+  sleep_enable(); // enables the sleep bit in the mcucr register  
+  delay(500);
+  Serial.println("About to sleep");
+  delay(500);
+  attachInterrupt(0, wakeUpNow, LOW); // use interrupt 0 (pin 2) and run function  
+  delay(500);
+  Serial.println("Interupt attached");
+  delay(500);
+  sleep_mode(); // here the device is actually put to sleep...!!
+
+  // THE PROGRAM CONTINUES FROM HERE AFTER INTERRUPT IS CLOSED
+  delay(500);
+  Serial.println("Continuing main program after interupt");
+  delay(500);
+
+  sleep_disable(); // first thing after waking from sleep: disable sl¯eep...  
+  delay(500);
+  Serial.println("Sleep disabled");
+  delay(500);
+}
+uint16_t readdata;
+void loop() {
+  if (digitalRead(2) == 0) {
+    {
+
+      digitalWrite(13, 1);
+      delay(100);
+      digitalWrite(13, 0);
+      delay(100);
+    }
+  }
+  sleepNow(); // sleep function called here
+  readdata = readByte(MPU6050_ADDRESS, 0x3A);
+  Serial.print(readdata);
+  Serial.print(",");
+  readdata = readByte(MPU6050_ADDRESS, 0x37);
+  Serial.println(readdata);
+
+}
+'''
