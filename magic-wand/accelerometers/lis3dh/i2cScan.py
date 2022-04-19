@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# an i2c scanner
+# i2cScan.py: an i2c scanner
 # Scans all addresses on the I2C bus and prints the addresses of connected
 # modules
 # This is a special version for the LIS3DH because here the scl and sda pins

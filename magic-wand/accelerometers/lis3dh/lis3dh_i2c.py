@@ -1,3 +1,12 @@
+# lis3dh_i2c.py: the subclass of lis3dh using the I2C interface.
+#                use this if you want to access the lis3dh with I2C
+# The class only implements the class initialization and the register access
+# methods, which are specific to the I2C interface
+# All other methods are implemented in the lis3dh super class
+# Copyright (c) U. Raich, March 2022
+# This program is part of the course on TinyML at the University of Cape Coast, Ghana
+# It is released under the MIT license
+
 from lis3dh import LIS3DH
 from machine import Pin,SoftI2C
 from lis3dh_const import *

@@ -1,3 +1,8 @@
+# lis3dh_const.py: constants used be the lis3dh accelerometer driver
+# Copyright (c) U. Raich, March 2022
+# This program is part of the course on TinyML at the University of Cape Coast, Ghana
+# It is released under the MIT license
+
 from micropython import const
 LIS3DH_READ                     = const(0x80)
 LIS3DH_WRITE                    = const(0x00)
@@ -121,8 +126,8 @@ AUTO_RESET                      = 3
 
 I1_CLICK                        = 7
 I1_IA1                          = 6
-I1_IA1                          = 5
-I1_ZXYDA                        = 4
+I1_IA2                          = 5
+I1_ZYXDA                        = 4
 I1_321DA                        = 3
 I1_WTM                          = 2
 I1_OVERRUN                      = 1
